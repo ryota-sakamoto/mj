@@ -23,7 +23,7 @@ func NewRoomHandler(service service.RoomService) *RoomHandler {
 }
 
 func (r *RoomHandler) Create(ctx context.Context, req *pb.CreateRoomRequest) (*pb.Room, error) {
-	slog.Info("create request", slog.Any("req", req))
+	slog.InfoCtx(ctx, "create request", slog.Any("req", req))
 
 	res, err := r.service.Create(ctx, model.FromCreateRoomRequest(req))
 	if err != nil {

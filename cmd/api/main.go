@@ -12,24 +12,24 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/ryota-sakamoto/mj/internal/handler"
+	"github.com/ryota-sakamoto/mj/internal/repository"
 	"github.com/ryota-sakamoto/mj/internal/service"
 	"github.com/ryota-sakamoto/mj/pkg/middleware"
 	"github.com/ryota-sakamoto/mj/pkg/pb"
 )
 
 func init() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout)))
+	slog.SetDefault(slog.New(middleware.NewLogHandler()))
 }
 
 func main() {
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			middleware.RequestID(),
 			middleware.Logger(),
 		),
 	)
 	reflection.Register(server)
-	pb.RegisterRoomServiceServer(server, handler.NewRoomHandler(service.NewRoomService()))
+	pb.RegisterRoomServiceServer(server, handler.NewRoomHandler(service.NewRoomService(repository.NewRoomRepository())))
 
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
