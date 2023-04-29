@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option go_package = "pkg/pb/";
+
+service RoomService {
+    rpc Create(CreateRoomRequest) returns (CreateRoomResponse) {}
+}
+
+message CreateRoomRequest {
+}
+
+message CreateRoomResponse {
+}
