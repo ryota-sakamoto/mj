@@ -20,7 +20,10 @@ func main() {
 	}
 
 	client := pb.NewRoomServiceClient(conn)
-	res, err := client.Create(context.TODO(), &pb.CreateRoomRequest{})
+	res, err := client.Create(context.TODO(), &pb.CreateRoomRequest{
+		Name:     "room",
+		Password: "test",
+	})
 	if err != nil {
 		panic(err)
 	}

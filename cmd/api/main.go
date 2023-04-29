@@ -11,9 +11,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ryota-sakamoto/mj/internal/handler"
+	"github.com/ryota-sakamoto/mj/internal/service"
 	"github.com/ryota-sakamoto/mj/pkg/middleware"
 	"github.com/ryota-sakamoto/mj/pkg/pb"
-	"github.com/ryota-sakamoto/mj/pkg/service"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func main() {
 		),
 	)
 	reflection.Register(server)
-	pb.RegisterRoomServiceServer(server, service.NewRoomService())
+	pb.RegisterRoomServiceServer(server, handler.NewRoomHandler(service.NewRoomService()))
 
 	l, err := net.Listen("tcp", ":8080")
 	if err != nil {
