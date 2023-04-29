@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ryota-sakamoto/mj/pkg/middleware"
 	"github.com/ryota-sakamoto/mj/pkg/pb"
 	"github.com/ryota-sakamoto/mj/pkg/service"
 )
@@ -20,7 +21,12 @@ func init() {
 }
 
 func main() {
-	server := grpc.NewServer()
+	server := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			middleware.RequestID(),
+			middleware.Logger(),
+		),
+	)
 	reflection.Register(server)
 	pb.RegisterRoomServiceServer(server, service.NewRoomService())
 
