@@ -11,7 +11,7 @@ type requestIDKey struct{}
 
 func RequestID() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		ctx = context.WithValue(ctx, requestIDKey{}, uuid.New().String())
+		ctx = context.WithValue(ctx, requestIDKey{}, uuid.NewString())
 
 		return handler(ctx, req)
 	}

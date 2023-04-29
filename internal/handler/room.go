@@ -6,6 +6,7 @@ import (
 	"golang.org/x/exp/slog"
 
 	"github.com/ryota-sakamoto/mj/internal/service"
+	"github.com/ryota-sakamoto/mj/pkg/model"
 	"github.com/ryota-sakamoto/mj/pkg/pb"
 )
 
@@ -21,8 +22,13 @@ func NewRoomHandler(service service.RoomService) *RoomHandler {
 	}
 }
 
-func (r *RoomHandler) Create(ctx context.Context, req *pb.CreateRoomRequest) (*pb.CreateRoomResponse, error) {
-	slog.Info("create", slog.Any("req", req))
+func (r *RoomHandler) Create(ctx context.Context, req *pb.CreateRoomRequest) (*pb.Room, error) {
+	slog.Info("create request", slog.Any("req", req))
 
-	return &pb.CreateRoomResponse{}, nil
+	res, err := r.service.Create(ctx, model.FromCreateRoomRequest(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Into(), nil
 }

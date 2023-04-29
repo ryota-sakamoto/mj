@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoomServiceClient interface {
-	Create(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error)
+	Create(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error)
 }
 
 type roomServiceClient struct {
@@ -33,8 +33,8 @@ func NewRoomServiceClient(cc grpc.ClientConnInterface) RoomServiceClient {
 	return &roomServiceClient{cc}
 }
 
-func (c *roomServiceClient) Create(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error) {
-	out := new(CreateRoomResponse)
+func (c *roomServiceClient) Create(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error) {
+	out := new(Room)
 	err := c.cc.Invoke(ctx, "/RoomService/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *roomServiceClient) Create(ctx context.Context, in *CreateRoomRequest, o
 // All implementations must embed UnimplementedRoomServiceServer
 // for forward compatibility
 type RoomServiceServer interface {
-	Create(context.Context, *CreateRoomRequest) (*CreateRoomResponse, error)
+	Create(context.Context, *CreateRoomRequest) (*Room, error)
 	mustEmbedUnimplementedRoomServiceServer()
 }
 
@@ -54,7 +54,7 @@ type RoomServiceServer interface {
 type UnimplementedRoomServiceServer struct {
 }
 
-func (UnimplementedRoomServiceServer) Create(context.Context, *CreateRoomRequest) (*CreateRoomResponse, error) {
+func (UnimplementedRoomServiceServer) Create(context.Context, *CreateRoomRequest) (*Room, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
 func (UnimplementedRoomServiceServer) mustEmbedUnimplementedRoomServiceServer() {}

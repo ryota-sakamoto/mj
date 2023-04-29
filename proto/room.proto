@@ -3,7 +3,7 @@ syntax = "proto3";
 option go_package = "pkg/pb/";
 
 service RoomService {
-    rpc Create(CreateRoomRequest) returns (CreateRoomResponse) {}
+    rpc Create(CreateRoomRequest) returns (Room) {}
 }
 
 message CreateRoomRequest {
@@ -11,5 +11,7 @@ message CreateRoomRequest {
     string password = 2;
 }
 
-message CreateRoomResponse {
+message Room {
+    string id = 1;
+    string name = 2;
 }
