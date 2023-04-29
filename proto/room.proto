@@ -7,11 +7,9 @@ service RoomService {
 }
 
 message CreateRoomRequest {
-    string name = 1;
-    string password = 2;
+    string password = 1;
 }
 
 message Room {
     string id = 1;
-    string name = 2;
 }

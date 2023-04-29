@@ -2,26 +2,64 @@ package repository
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"sync"
+
+	"github.com/google/uuid"
 
 	"github.com/ryota-sakamoto/mj/pkg/model"
 )
 
 type RoomRepository interface {
-	Create(context.Context, *model.CreateRoom) error
+	Create(context.Context, *model.CreateRoom) (*model.Room, error)
 }
 
 type roomRepository struct {
-	sync.Mutex
+	sync.RWMutex
+
+	rooms map[string]*innerRoom
 }
 
 func NewRoomRepository() RoomRepository {
-	return &roomRepository{}
+	return &roomRepository{
+		rooms: map[string]*innerRoom{},
+	}
 }
 
-func (r *roomRepository) Create(ctx context.Context, room *model.CreateRoom) error {
+type innerRoom struct {
+	room *model.Room
+	salt string
+	hash string
+}
+
+func hashWithSalt(password, salt string) string {
+	return fmt.Sprintf("%+x", sha256.Sum256([]byte(password+salt)))
+}
+
+func newInnerRoom(req *model.CreateRoom) *innerRoom {
+	id := uuid.NewString()
+	salt := uuid.NewString()
+
+	return &innerRoom{
+		room: &model.Room{
+			ID: id,
+		},
+		salt: salt,
+		hash: hashWithSalt(req.Password, salt),
+	}
+}
+
+func (r *innerRoom) match(password string) bool {
+	return hashWithSalt(password, r.salt) == r.hash
+}
+
+func (r *roomRepository) Create(ctx context.Context, req *model.CreateRoom) (*model.Room, error) {
 	r.Lock()
 	defer r.Unlock()
 
-	return nil
+	inner := newInnerRoom(req)
+	r.rooms[inner.room.ID] = inner
+
+	return inner.room, nil
 }
