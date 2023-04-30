@@ -13,6 +13,7 @@ import (
 
 type RoomRepository interface {
 	Create(context.Context, *model.CreateRoom) (*model.Room, error)
+	Get(context.Context, string, string) (*model.Room, error)
 }
 
 type roomRepository struct {
@@ -62,4 +63,16 @@ func (r *roomRepository) Create(ctx context.Context, req *model.CreateRoom) (*mo
 	r.rooms[inner.room.ID] = inner
 
 	return inner.room, nil
+}
+
+func (r *roomRepository) Get(ctx context.Context, id string, password string) (*model.Room, error) {
+	r.RLock()
+	defer r.RUnlock()
+
+	room := r.rooms[id]
+	if room == nil || !room.match(password) {
+		return nil, model.ErrNotFound
+	}
+
+	return room.room, nil
 }

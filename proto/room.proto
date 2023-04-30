@@ -4,12 +4,24 @@ option go_package = "pkg/pb/";
 
 service RoomService {
     rpc Create(CreateRoomRequest) returns (Room) {}
+    rpc Join(JoinRoomRequest) returns (JoinRoom) {}
 }
 
 message CreateRoomRequest {
     string password = 1;
+    string owner_name = 2;
 }
 
 message Room {
     string id = 1;
+}
+
+message JoinRoomRequest {
+    string id = 1;
+    string password = 2;
+    string user_name = 3;
+}
+
+message JoinRoom {
+    string token = 1;
 }

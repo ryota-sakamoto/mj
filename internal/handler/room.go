@@ -32,3 +32,14 @@ func (r *RoomHandler) Create(ctx context.Context, req *pb.CreateRoomRequest) (*p
 
 	return res.Into(), nil
 }
+
+func (r *RoomHandler) Join(ctx context.Context, req *pb.JoinRoomRequest) (*pb.JoinRoom, error) {
+	err := r.service.Join(ctx, model.FromJoinRoomRequest(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.JoinRoom{
+		Token: "hoge",
+	}, nil
+}

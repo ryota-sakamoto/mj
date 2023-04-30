@@ -20,12 +20,24 @@ func main() {
 	}
 
 	client := pb.NewRoomServiceClient(conn)
-	res, err := client.Create(context.TODO(), &pb.CreateRoomRequest{
-		Password: "test",
+	room, err := client.Create(context.TODO(), &pb.CreateRoomRequest{
+		Password:  "test",
+		OwnerName: "owner",
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	slog.Info("create room res", slog.Any("res", res))
+	slog.Info("create room res", slog.Any("room", room))
+
+	res, err := client.Join(context.TODO(), &pb.JoinRoomRequest{
+		Id:       room.Id,
+		Password: "test",
+		UserName: "user",
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	slog.Info("join room res", slog.Any("res", res))
 }

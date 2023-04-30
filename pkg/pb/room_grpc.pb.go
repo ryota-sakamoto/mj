@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoomServiceClient interface {
 	Create(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error)
+	Join(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*JoinRoom, error)
 }
 
 type roomServiceClient struct {
@@ -42,11 +43,21 @@ func (c *roomServiceClient) Create(ctx context.Context, in *CreateRoomRequest, o
 	return out, nil
 }
 
+func (c *roomServiceClient) Join(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*JoinRoom, error) {
+	out := new(JoinRoom)
+	err := c.cc.Invoke(ctx, "/RoomService/Join", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomServiceServer is the server API for RoomService service.
 // All implementations must embed UnimplementedRoomServiceServer
 // for forward compatibility
 type RoomServiceServer interface {
 	Create(context.Context, *CreateRoomRequest) (*Room, error)
+	Join(context.Context, *JoinRoomRequest) (*JoinRoom, error)
 	mustEmbedUnimplementedRoomServiceServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedRoomServiceServer struct {
 
 func (UnimplementedRoomServiceServer) Create(context.Context, *CreateRoomRequest) (*Room, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (UnimplementedRoomServiceServer) Join(context.Context, *JoinRoomRequest) (*JoinRoom, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Join not implemented")
 }
 func (UnimplementedRoomServiceServer) mustEmbedUnimplementedRoomServiceServer() {}
 
@@ -88,6 +102,24 @@ func _RoomService_Create_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomService_Join_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomServiceServer).Join(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/RoomService/Join",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomServiceServer).Join(ctx, req.(*JoinRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomService_ServiceDesc is the grpc.ServiceDesc for RoomService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var RoomService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Create",
 			Handler:    _RoomService_Create_Handler,
+		},
+		{
+			MethodName: "Join",
+			Handler:    _RoomService_Join_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

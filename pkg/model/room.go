@@ -23,3 +23,17 @@ func FromCreateRoomRequest(r *pb.CreateRoomRequest) *CreateRoom {
 		Password: r.Password,
 	}
 }
+
+type JoinRoom struct {
+	ID       string
+	Password string
+	UserName string
+}
+
+func FromJoinRoomRequest(r *pb.JoinRoomRequest) *JoinRoom {
+	return &JoinRoom{
+		ID:       r.Id,
+		Password: r.Password,
+		UserName: r.UserName,
+	}
+}
