@@ -4,7 +4,7 @@ option go_package = "pkg/pb/";
 
 service RoomService {
     rpc Create(CreateRoomRequest) returns (Room) {}
-    rpc Join(JoinRoomRequest) returns (JoinRoom) {}
+    rpc StreamEvents(stream RoomUserEvent) returns (stream RoomServerEvent) {}
 }
 
 message CreateRoomRequest {
@@ -16,12 +16,33 @@ message Room {
     string id = 1;
 }
 
-message JoinRoomRequest {
+message RoomUserEvent {
+    oneof event {
+        Join join = 1;
+        Leave leave = 2;
+    }
+}
+
+message Join {
     string id = 1;
     string password = 2;
     string user_name = 3;
 }
 
-message JoinRoom {
-    string token = 1;
+message Leave {
+}
+
+message RoomServerEvent {
+    oneof event {
+        Joined joined = 1;
+        Left left = 2;
+    }
+}
+
+message Joined {
+    string user_name = 1;
+}
+
+message Left {
+    string user_name = 1;
 }

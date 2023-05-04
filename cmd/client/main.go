@@ -30,14 +30,35 @@ func main() {
 
 	slog.Info("create room res", slog.Any("room", room))
 
-	res, err := client.Join(context.TODO(), &pb.JoinRoomRequest{
-		Id:       room.Id,
-		Password: "test",
-		UserName: "user",
+	eventClient, err := client.StreamEvents(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	go func() {
+		for {
+			event, err := eventClient.Recv()
+			if err != nil {
+				panic(err)
+			}
+
+			slog.Info("receive event", slog.Any("event", event))
+		}
+	}()
+
+	err = eventClient.Send(&pb.RoomUserEvent{
+		Event: &pb.RoomUserEvent_Join{
+			Join: &pb.Join{
+				Id:       room.Id,
+				UserName: "user",
+				Password: "test",
+			},
+		},
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	slog.Info("join room res", slog.Any("res", res))
+	eventClient.CloseSend()
+	<-eventClient.Context().Done()
 }

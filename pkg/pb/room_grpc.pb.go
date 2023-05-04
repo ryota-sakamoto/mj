@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoomServiceClient interface {
 	Create(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error)
-	Join(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*JoinRoom, error)
+	StreamEvents(ctx context.Context, opts ...grpc.CallOption) (RoomService_StreamEventsClient, error)
 }
 
 type roomServiceClient struct {
@@ -43,13 +43,35 @@ func (c *roomServiceClient) Create(ctx context.Context, in *CreateRoomRequest, o
 	return out, nil
 }
 
-func (c *roomServiceClient) Join(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (*JoinRoom, error) {
-	out := new(JoinRoom)
-	err := c.cc.Invoke(ctx, "/RoomService/Join", in, out, opts...)
+func (c *roomServiceClient) StreamEvents(ctx context.Context, opts ...grpc.CallOption) (RoomService_StreamEventsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RoomService_ServiceDesc.Streams[0], "/RoomService/StreamEvents", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &roomServiceStreamEventsClient{stream}
+	return x, nil
+}
+
+type RoomService_StreamEventsClient interface {
+	Send(*RoomUserEvent) error
+	Recv() (*RoomServerEvent, error)
+	grpc.ClientStream
+}
+
+type roomServiceStreamEventsClient struct {
+	grpc.ClientStream
+}
+
+func (x *roomServiceStreamEventsClient) Send(m *RoomUserEvent) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *roomServiceStreamEventsClient) Recv() (*RoomServerEvent, error) {
+	m := new(RoomServerEvent)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // RoomServiceServer is the server API for RoomService service.
@@ -57,7 +79,7 @@ func (c *roomServiceClient) Join(ctx context.Context, in *JoinRoomRequest, opts 
 // for forward compatibility
 type RoomServiceServer interface {
 	Create(context.Context, *CreateRoomRequest) (*Room, error)
-	Join(context.Context, *JoinRoomRequest) (*JoinRoom, error)
+	StreamEvents(RoomService_StreamEventsServer) error
 	mustEmbedUnimplementedRoomServiceServer()
 }
 
@@ -68,8 +90,8 @@ type UnimplementedRoomServiceServer struct {
 func (UnimplementedRoomServiceServer) Create(context.Context, *CreateRoomRequest) (*Room, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedRoomServiceServer) Join(context.Context, *JoinRoomRequest) (*JoinRoom, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Join not implemented")
+func (UnimplementedRoomServiceServer) StreamEvents(RoomService_StreamEventsServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamEvents not implemented")
 }
 func (UnimplementedRoomServiceServer) mustEmbedUnimplementedRoomServiceServer() {}
 
@@ -102,22 +124,30 @@ func _RoomService_Create_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoomService_Join_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(JoinRoomRequest)
-	if err := dec(in); err != nil {
+func _RoomService_StreamEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(RoomServiceServer).StreamEvents(&roomServiceStreamEventsServer{stream})
+}
+
+type RoomService_StreamEventsServer interface {
+	Send(*RoomServerEvent) error
+	Recv() (*RoomUserEvent, error)
+	grpc.ServerStream
+}
+
+type roomServiceStreamEventsServer struct {
+	grpc.ServerStream
+}
+
+func (x *roomServiceStreamEventsServer) Send(m *RoomServerEvent) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *roomServiceStreamEventsServer) Recv() (*RoomUserEvent, error) {
+	m := new(RoomUserEvent)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(RoomServiceServer).Join(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/RoomService/Join",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoomServiceServer).Join(ctx, req.(*JoinRoomRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 // RoomService_ServiceDesc is the grpc.ServiceDesc for RoomService service.
@@ -131,11 +161,14 @@ var RoomService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Create",
 			Handler:    _RoomService_Create_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "Join",
-			Handler:    _RoomService_Join_Handler,
+			StreamName:    "StreamEvents",
+			Handler:       _RoomService_StreamEvents_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/room.proto",
 }
