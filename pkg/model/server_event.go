@@ -8,17 +8,17 @@ type ServerEvent interface {
 	Into() *pb.RoomServerEvent
 }
 
-type ServerEventJoined struct {
+type serverEventJoined struct {
 	username string
 }
 
 func NewServerEventJoined(username string) ServerEvent {
-	return &ServerEventJoined{
+	return &serverEventJoined{
 		username: username,
 	}
 }
 
-func (s *ServerEventJoined) Into() *pb.RoomServerEvent {
+func (s *serverEventJoined) Into() *pb.RoomServerEvent {
 	return &pb.RoomServerEvent{
 		Event: &pb.RoomServerEvent_Joined{
 			Joined: &pb.Joined{
@@ -28,13 +28,33 @@ func (s *ServerEventJoined) Into() *pb.RoomServerEvent {
 	}
 }
 
-type ServerEventEmpty struct {
+type serverEventEmpty struct {
 }
 
 func NewServerEventEmpty() ServerEvent {
-	return &ServerEventEmpty{}
+	return &serverEventEmpty{}
 }
 
-func (s *ServerEventEmpty) Into() *pb.RoomServerEvent {
+func (s *serverEventEmpty) Into() *pb.RoomServerEvent {
 	return nil
+}
+
+type serverEventRejected struct {
+	reason string
+}
+
+func NewServerEventRejected(reason string) ServerEvent {
+	return &serverEventRejected{
+		reason: reason,
+	}
+}
+
+func (s *serverEventRejected) Into() *pb.RoomServerEvent {
+	return &pb.RoomServerEvent{
+		Event: &pb.RoomServerEvent_Rejected{
+			Rejected: &pb.Rejected{
+				Reason: s.reason,
+			},
+		},
+	}
 }

@@ -37,6 +37,35 @@ func Logger() grpc.UnaryServerInterceptor {
 	}
 }
 
+func StreamLogger() grpc.StreamServerInterceptor {
+	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		ctx := context.WithValue(ss.Context(), requestIDKey{}, uuid.NewString())
+
+		slog.InfoCtx(
+			ctx,
+			"stream start",
+			slog.String("method", info.FullMethod),
+		)
+
+		err := handler(srv, ss)
+		if err != nil {
+			slog.ErrorCtx(
+				ctx,
+				"stream handler error",
+				slog.Any("error", err),
+			)
+		}
+
+		slog.InfoCtx(
+			ctx,
+			"stream end",
+			slog.String("method", info.FullMethod),
+		)
+
+		return err
+	}
+}
+
 type Handler struct {
 	*slog.JSONHandler
 }

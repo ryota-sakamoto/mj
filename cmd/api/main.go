@@ -27,6 +27,9 @@ func main() {
 		grpc.ChainUnaryInterceptor(
 			middleware.Logger(),
 		),
+		grpc.ChainStreamInterceptor(
+			middleware.StreamLogger(),
+		),
 	)
 	reflection.Register(server)
 	pb.RegisterRoomServiceServer(server, handler.NewRoomHandler(service.NewRoomService(repository.NewRoomRepository())))
