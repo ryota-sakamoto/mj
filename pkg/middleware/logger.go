@@ -47,7 +47,10 @@ func StreamLogger() grpc.StreamServerInterceptor {
 			slog.String("method", info.FullMethod),
 		)
 
-		err := handler(srv, ss)
+		err := handler(srv, &streamWrapper{
+			ServerStream: ss,
+			ctx:          ctx,
+		})
 		if err != nil {
 			slog.ErrorCtx(
 				ctx,
@@ -64,6 +67,15 @@ func StreamLogger() grpc.StreamServerInterceptor {
 
 		return err
 	}
+}
+
+type streamWrapper struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s *streamWrapper) Context() context.Context {
+	return s.ctx
 }
 
 type Handler struct {
