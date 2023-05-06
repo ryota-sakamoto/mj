@@ -45,7 +45,8 @@ func newInnerRoom(req *model.CreateRoom) *innerRoom {
 
 	return &innerRoom{
 		room: &model.Room{
-			ID: id,
+			ID:          id,
+			PlayerCount: req.PlayerCount,
 		},
 		salt: salt,
 		hash: hashWithSalt(req.Password, salt),

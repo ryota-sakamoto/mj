@@ -26,10 +26,11 @@ func main() {
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			middleware.Logger(),
+			middleware.TransformErrorResponse(),
 		),
 		grpc.ChainStreamInterceptor(
 			middleware.StreamLogger(),
-			middleware.TransformStreamResponse(),
+			middleware.TransformStreamErrorResponse(),
 		),
 	)
 	reflection.Register(server)
