@@ -21,8 +21,9 @@ func main() {
 
 	client := pb.NewRoomServiceClient(conn)
 	room, err := client.Create(context.TODO(), &pb.CreateRoomRequest{
-		Password:  "test",
-		OwnerName: "owner",
+		Password:    "test",
+		OwnerName:   "owner",
+		PlayerCount: 4,
 	})
 	if err != nil {
 		panic(err)
