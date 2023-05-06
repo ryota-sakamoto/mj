@@ -29,6 +29,7 @@ func main() {
 		),
 		grpc.ChainStreamInterceptor(
 			middleware.StreamLogger(),
+			middleware.TransformStreamResponse(),
 		),
 	)
 	reflection.Register(server)

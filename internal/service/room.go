@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"golang.org/x/exp/slog"
@@ -48,17 +49,13 @@ func (r *roomService) handleJoin(ctx context.Context, req *model.UserEventJoin) 
 
 	_, err := r.repository.Get(ctx, req.ID, req.Password)
 	if err != nil {
-		if err == model.ErrNotFound {
-			return model.NewServerEventRejected("room is not found"), nil
-		}
-
 		slog.ErrorCtx(ctx,
 			"get room error",
 			slog.String("id", req.ID),
 			slog.Any("error", err),
 		)
 
-		return nil, err
+		return nil, fmt.Errorf("get room error: %w", err)
 	}
 
 	return model.NewServerEventJoined(req.Username), nil
