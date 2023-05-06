@@ -47,15 +47,13 @@ func (r *roomService) HandleUserEvent(ctx context.Context, event model.UserEvent
 func (r *roomService) handleJoin(ctx context.Context, req *model.UserEventJoin) (model.ServerEvent, error) {
 	slog.InfoCtx(ctx, "receive join", slog.Any("req", req))
 
-	_, err := r.repository.Get(ctx, req.ID, req.Password)
+	room, err := r.repository.Get(ctx, req.ID, req.Password)
 	if err != nil {
-		slog.ErrorCtx(ctx,
-			"get room error",
-			slog.String("id", req.ID),
-			slog.Any("error", err),
-		)
-
 		return nil, fmt.Errorf("get room error: %w", err)
+	}
+
+	if err := r.repository.Join(ctx, room, req.Username); err != nil {
+		return nil, fmt.Errorf("join room error: %w", err)
 	}
 
 	return model.NewServerEventJoined(req.Username), nil

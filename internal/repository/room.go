@@ -14,6 +14,7 @@ import (
 type RoomRepository interface {
 	Create(context.Context, *model.CreateRoom) (*model.Room, error)
 	Get(context.Context, string, string) (*model.Room, error)
+	Join(context.Context, *model.Room, string) error
 }
 
 type roomRepository struct {
@@ -69,10 +70,17 @@ func (r *roomRepository) Get(ctx context.Context, id string, password string) (*
 	r.RLock()
 	defer r.RUnlock()
 
-	room := r.rooms[id]
-	if room == nil || !room.match(password) {
+	room, ok := r.rooms[id]
+	if !ok || !room.match(password) {
 		return nil, model.ErrNotFound
 	}
 
 	return room.room, nil
+}
+
+func (r *roomRepository) Join(ctx context.Context, room *model.Room, username string) error {
+	r.Lock()
+	defer r.Unlock()
+
+	return nil
 }
