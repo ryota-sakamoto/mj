@@ -52,7 +52,7 @@ func (r *roomService) handleJoin(ctx context.Context, req *model.UserEventJoin) 
 		return nil, fmt.Errorf("get room error: %w", err)
 	}
 
-	if err := r.repository.Join(ctx, room, req.Username); err != nil {
+	if err := r.repository.Join(ctx, room.ID, req.Username); err != nil {
 		return nil, fmt.Errorf("join room error: %w", err)
 	}
 

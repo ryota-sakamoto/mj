@@ -14,7 +14,7 @@ import (
 type RoomRepository interface {
 	Create(context.Context, *model.CreateRoom) (*model.Room, error)
 	Get(context.Context, string, string) (*model.Room, error)
-	Join(context.Context, *model.Room, string) error
+	Join(context.Context, string, string) error
 }
 
 type roomRepository struct {
@@ -30,9 +30,10 @@ func NewRoomRepository() RoomRepository {
 }
 
 type innerRoom struct {
-	room *model.Room
-	salt string
-	hash string
+	room  *model.Room
+	users []*model.User
+	salt  string
+	hash  string
 }
 
 func hashWithSalt(password, salt string) string {
@@ -47,6 +48,11 @@ func newInnerRoom(req *model.CreateRoom) *innerRoom {
 		room: &model.Room{
 			ID:          id,
 			PlayerCount: req.PlayerCount,
+		},
+		users: []*model.User{
+			{
+				Name: req.OwnerName,
+			},
 		},
 		salt: salt,
 		hash: hashWithSalt(req.Password, salt),
@@ -79,9 +85,20 @@ func (r *roomRepository) Get(ctx context.Context, id string, password string) (*
 	return room.room, nil
 }
 
-func (r *roomRepository) Join(ctx context.Context, room *model.Room, username string) error {
+func (r *roomRepository) Join(ctx context.Context, id string, username string) error {
 	r.Lock()
 	defer r.Unlock()
+
+	room := r.rooms[id]
+	if len(room.users) >= int(room.room.PlayerCount) {
+		return model.ErrLimitExceeded
+	}
+
+	room.users = append(room.users, &model.User{
+		Name: username,
+	})
+
+	r.rooms[id] = room
 
 	return nil
 }

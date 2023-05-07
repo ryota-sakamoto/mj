@@ -5,6 +5,7 @@ import (
 )
 
 var ErrNotFound = errors.New("not found")
+var ErrLimitExceeded = errors.New("limit exceeded")
 
 type ValidationError struct {
 	reason string

@@ -20,6 +20,7 @@ func (r *Room) Into() *pb.Room {
 
 type CreateRoom struct {
 	Password    string
+	OwnerName   string
 	PlayerCount int64
 }
 
@@ -30,6 +31,7 @@ func FromCreateRoomRequest(r *pb.CreateRoomRequest) (*CreateRoom, error) {
 
 	return &CreateRoom{
 		Password:    r.Password,
+		OwnerName:   r.OwnerName,
 		PlayerCount: r.PlayerCount,
 	}, nil
 }
