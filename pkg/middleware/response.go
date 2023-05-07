@@ -42,6 +42,10 @@ func TransformError(err error) error {
 		return status.Error(codes.NotFound, err.Error())
 	}
 
+	if errors.Is(err, model.ErrAlreadyJoined) {
+		return status.Error(codes.AlreadyExists, err.Error())
+	}
+
 	if e, ok := err.(model.ValidationError); ok {
 		return status.Error(codes.InvalidArgument, e.Error())
 	}

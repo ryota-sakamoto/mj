@@ -6,6 +6,7 @@ import (
 
 var ErrNotFound = errors.New("not found")
 var ErrLimitExceeded = errors.New("limit exceeded")
+var ErrAlreadyJoined = errors.New("user is alread joined")
 
 type ValidationError struct {
 	reason string

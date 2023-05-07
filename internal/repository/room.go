@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"golang.org/x/exp/slog"
 
 	"github.com/ryota-sakamoto/mj/pkg/model"
 )
@@ -90,6 +91,18 @@ func (r *roomRepository) Join(ctx context.Context, id string, username string) e
 	defer r.Unlock()
 
 	room := r.rooms[id]
+	for _, u := range room.users {
+		if u.Name == username {
+			slog.InfoCtx(
+				ctx,
+				"user is alread joined",
+				slog.String("id", id),
+				slog.String("username", username),
+			)
+			return model.ErrAlreadyJoined
+		}
+	}
+
 	if len(room.users) >= int(room.room.PlayerCount) {
 		return model.ErrLimitExceeded
 	}
