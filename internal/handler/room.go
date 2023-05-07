@@ -46,15 +46,15 @@ func (r *RoomHandler) StreamEvents(s pb.RoomService_StreamEventsServer) error {
 		return err
 	}
 
-	result, err := r.initStream(s.Context(), e)
+	result, id, err := r.initStream(s.Context(), e)
 	if err != nil {
 		return err
 	}
 
 	s.Send(result.Into())
 
-	go r.handleUserEvent(s)
-	go r.streamServerEvent(s)
+	go r.handleUserEvent(s, id)
+	go r.streamServerEvent(s, id)
 
 	<-s.Context().Done()
 	slog.InfoCtx(s.Context(), "close stream events")
@@ -62,23 +62,28 @@ func (r *RoomHandler) StreamEvents(s pb.RoomService_StreamEventsServer) error {
 	return nil
 }
 
-func (r *RoomHandler) initStream(ctx context.Context, event *pb.RoomUserEvent) (model.ServerEvent, error) {
+func (r *RoomHandler) initStream(ctx context.Context, event *pb.RoomUserEvent) (model.ServerEvent, string, error) {
 	joinEvent := event.GetJoin()
 	if joinEvent == nil {
 		slog.ErrorCtx(ctx, "the request is not joined to the room")
 
-		return nil, errors.New("the request is not joined to the room")
+		return nil, "", errors.New("the request is not joined to the room")
 	}
 
 	e, err := model.NewUserEventJoin(joinEvent)
 	if joinEvent == nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return r.service.HandleUserEvent(ctx, e)
+	result, err := r.service.HandleUserEvent(ctx, e.ID, e)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return result, e.ID, nil
 }
 
-func (r *RoomHandler) handleUserEvent(s pb.RoomService_StreamEventsServer) {
+func (r *RoomHandler) handleUserEvent(s pb.RoomService_StreamEventsServer, id string) {
 	ctx := s.Context()
 
 	for {
@@ -98,7 +103,7 @@ func (r *RoomHandler) handleUserEvent(s pb.RoomService_StreamEventsServer) {
 			continue
 		}
 
-		result, err := r.service.HandleUserEvent(ctx, event)
+		result, err := r.service.HandleUserEvent(ctx, id, event)
 		if err != nil {
 			slog.ErrorCtx(ctx, "handle user event error", slog.Any("error", err))
 			continue
@@ -109,11 +114,11 @@ func (r *RoomHandler) handleUserEvent(s pb.RoomService_StreamEventsServer) {
 	}
 }
 
-func (r *RoomHandler) streamServerEvent(s pb.RoomService_StreamEventsServer) {
+func (r *RoomHandler) streamServerEvent(s pb.RoomService_StreamEventsServer, id string) {
 	ctx := s.Context()
 
 	for {
-		event, err := r.service.StreamServerEvent(ctx)
+		event, err := r.service.StreamServerEvent(ctx, id)
 		if err != nil {
 			if err == io.EOF {
 				break

@@ -47,19 +47,17 @@ func main() {
 		}
 	}()
 
-	for {
-		err = eventClient.Send(&pb.RoomUserEvent{
-			Event: &pb.RoomUserEvent_Join{
-				Join: &pb.Join{
-					Id:       room.Id,
-					UserName: "user",
-					Password: "test",
-				},
+	err = eventClient.Send(&pb.RoomUserEvent{
+		Event: &pb.RoomUserEvent_Join{
+			Join: &pb.Join{
+				Id:       room.Id,
+				UserName: "user",
+				Password: "test",
 			},
-		})
-		if err != nil {
-			panic(err)
-		}
+		},
+	})
+	if err != nil {
+		panic(err)
 	}
 
 	eventClient.CloseSend()
